@@ -3,4 +3,4 @@
 ## Grado en ciencia de Datos UOC
 
 
-Enlace a github pages (https://ajimenezruiz.github.io/visualizacion-datos-practica/)[https://ajimenezruiz.github.io/visualizacion-datos-practica/]
+Enlace a github pages [https://ajimenezruiz.github.io/visualizacion-datos-practica/](https://ajimenezruiz.github.io/visualizacion-datos-practica/)
