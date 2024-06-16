@@ -3,10 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three.js Visualization</title>
+    <title>Houshold Universe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; }
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+    </style>
+
+    <style>
+        body { margin: 0;
+        font-family: 'Open Sans', sans-serif;
+         }
         canvas { display: block; }
+        .title-box {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            && h1 {
+                margin: 0;
+                font-size: 24px;
+            }
+            && p {
+                margin: 0;
+            }
+            && a {
+                color: white;
+                text-decoration: none;
+            }
+            && a:hover {
+                text-decoration: underline;
+            }
+            && h2 {
+                margin: 0;
+                font-size: 18px;
+            }
+        }
         .info-box {
             position: absolute;
             background: rgba(0, 0, 0, 0.7);
@@ -28,7 +64,7 @@
         }
         .legend {
             position: absolute;
-            top: 10px;
+            top: 120px;
             left: 10px;
             color: white;
             font-size: 16px;
@@ -50,7 +86,7 @@
         }
        .filter-box {
             position: absolute;
-            top: 50px;
+            top: 60px;
             right: 10px;
             background: rgba(0, 0, 0, 0.5);
             color: white;
@@ -60,10 +96,20 @@
     </style>
 </head>
 <body>
+
+  
+
+
+
     <div id="info-box" class="info-box"></div>
 
     <div  class="year-label"><span id="year-label" ></span>
      <button id="pause_resume">Pause</button> </div>
+    <div class="title-box">
+        <h1>Europe Household Exploration</h1>
+        <h2>Over on a country to explore its household data, you can zoom, rotate, and filter</h2>
+        Data sources: <a href="https://ec.europa.eu/eurostat/web/main/data/database">Eurostat</a>
+    </div>
     <div id="legend" class="legend"></div>
     <div id="filter-box" class="filter-box">
         <label for="size-field">Select size field:</label>
@@ -144,7 +190,8 @@
         const scale=5.7;
         const centerX = 0;
         const centerY = 0;
-        const centerZ = 0; // Ajustar para que la cámara esté en el mismo plano
+        const centerZ = 0;  
+
         // Cargar la textura del mapa de Europa
         const mapTexture = loader.load('https://ajimenezruiz.github.io/visualizacion-datos-practica/assets/europe.svg');
         const floorWidth = 1000;
@@ -6797,6 +6844,10 @@
                         //countrySphere.position.set( x * scale - 45,   y * scale - 160, 1); // Ajustar posición Z para estar justo encima del mapa
                         countrySphere.position.set( x, y, 1); // Ajustar posición Z para estar justo encima del mapa
                         countries[item.geo] = countrySphere;
+                        countrySphere.userData = {
+                            geo: item.geo,
+                            isCountry: true
+                        }
                         scene.add(countrySphere);
                     }
 
@@ -6812,6 +6863,7 @@
                     const categorySphere = createCategorySphere(item.hh, colors[item.hh], size);
                     categorySphere.userData = {
                         country: countries[item.geo],
+                        isCountry: false,
                         geo: item.geo,
                         distance:   10,
                         angle: Math.random() * Math.PI*2,
@@ -6831,7 +6883,7 @@
         }
 
         // Initialize data for the initial year
-        let currentYear = 2020;
+        let currentYear = 2022;
         initializeDataForYear(currentYear);
 
         // Add a light source
@@ -6879,17 +6931,42 @@
 
             if (intersects.length > 0) {
                 const intersected = intersects[0].object;
-                const { geo, house_disp, hh, not_employ_total, population } = intersected.userData;
+                const { geo, house_disp, hh, not_employ_total, employ_m, employ_f, population } = intersected.userData;
                 infoBox.style.display = 'block';
                 infoBox.style.left = `${event.clientX + 10}px`;
                 infoBox.style.top = `${event.clientY + 10}px`;
                 if(house_disp){
-                    infoBox.innerHTML = `${countryNames[geo]}<br>${hhcDescriptions[hh]}: <br> Income Disp: ${house_disp} <br> Unemploy: ${not_employ_total}<br> Household: <br> Population: ${population}`;
+                    infoBox.innerHTML = `<b>${countryNames[geo]}<br>${hhcDescriptions[hh]}</b> <br> Income Disp: ${house_disp.toFixed(2)} <br> Unemploy: ${not_employ_total.toFixed(2)}<br> Employ Male: ${employ_m.toFixed(2)}<br>Employ Female: ${employ_f.toFixed(2)} <br> Population: ${population.toFixed(2)}`;
                 } else {
                     infoBox.innerHTML = `${countryNames[geo]}`;
                 }
+                // Hacer semitransparentes todas las esferas excepto la intersectada
+                draggableObjects.forEach(sphere => {
+                    if (sphere == intersected) {
+                        activeGeo = sphere.userData.geo;
+                        pause = false;
+                        resume_play();
+                    }
+                });
+                console.log('activeGeo', activeGeo);
+                draggableObjects.forEach(sphere => {
+                    
+                    if (sphere.userData.geo !== activeGeo) {
+                        sphere.material.opacity = 0.2;
+                        sphere.material.transparent = true;
+                        sphere.userData.animationPaused = false; // Marcar como pausada
+                    } else {
+                        sphere.material.opacity = 1.0;
+                        sphere.userData.animationPaused = true; // Marcar como no pausada
+                    }
+                });
             } else {
+                activeGeo = null;
                 infoBox.style.display = 'none';
+                draggableObjects.forEach(sphere => {
+                            sphere.material.opacity = 1.0;
+                            sphere.userData.animationPaused = false; // Marcar como no pausada
+                        });
             }
         }
 
@@ -6944,18 +7021,20 @@
         var pause = false;
         var animationDelay = 4000;
         document.getElementById('pause_resume').addEventListener('click', (event) => {
+           resume_play();
+        });
+
+        function resume_play(){
             if (pause) {
                 pause = false;
                 document.getElementById('pause_resume').innerHTML = 'Pause';
                 timerAnimation = setTimeout(updateYearData, animationDelay);
-
-
             } else {
                 pause = true;
                 document.getElementById('pause_resume').innerHTML = 'Resume';
                 clearTimeout(timerAnimation);
             }
-        });
+        }
 
         // Animation loop
         function animate() {
@@ -6963,6 +7042,9 @@
 
             // Update positions of category spheres
             categorySpheres.forEach(sphere => {
+                if (sphere.userData.animationPaused) {
+                    return;
+                }
                 sphere.userData.angle += sphere.userData.speed;
                 const distance = sphere.userData.distance;
                 sphere.position.x = sphere.userData.country.position.x + distance * Math.cos(sphere.userData.angle);
@@ -7023,5 +7105,9 @@
 
 
     </script>
+  
+
+ 
+
 </body>
 </html>
