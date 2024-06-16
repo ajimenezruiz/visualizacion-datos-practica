@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "build": "cross-env MY_ENVIRONMENT=github npx @11ty/eleventy",
+    "server": "cross-env MY_ENVIRONMENT=dev npx @11ty/eleventy --serve"
+  },
+  "dependencies": {
+    "clean-css": "^5.3.3",
+    "cross-env": "^7.0.3",
+    "eleventy": "^1.0.7"
+  }
+}
